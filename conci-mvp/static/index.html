@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Conci Voice Assistant</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background-color: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .input-section, .controls {
+      margin-top: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      padding: 1rem;
+      font-size: 16px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 0.75rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background-color: #007BFF;
+      color: #fff;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .response {
+      margin-top: 1.5rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 0 5px #ccc;
+      white-space: pre-wrap;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <h1>🗣️ Conci Voice Assistant</h1>
+    <p>Type a command below and press Submit</p>
+
+    <section class="input-section">
+      <label for="voiceInput" class="visually-hidden">Voice command</label>
+      <textarea id="voiceInput" placeholder="Enter your voice command here..."></textarea>
+      <div class="controls">
+        <button onclick="sendVoice()">Submit</button>
+        <button onclick="togglePrivacy()" id="micButton">🔇 Mic Kill Switch</button>
+      </div>
+    </section>
+
+    <section id="result" class="response"></section>
+    <section id="privacyMsg" class="response hidden"></section>
+  </main>
+
+  <script>
+    let micMuted = false;
+
+    async function sendVoice() {
+      const input = document.getElementById("voiceInput");
+      const resultDiv = document.getElementById("result");
+
+      if (micMuted) {
+        resultDiv.textContent = "Mic is muted. Please turn it on to send a command.";
+        return;
+      }
+
+      const res = await fetch("http://127.0.0.1:8000/voice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ voice_text: input.value })
+      });
+
+      const data = await res.json();
+      resultDiv.textContent = JSON.stringify(data, null, 2);
+    }
+
+    function togglePrivacy() {
+      const input = document.getElementById("voiceInput");
+      const msgDiv = document.getElementById("privacyMsg");
+      const micBtn = document.getElementById("micButton");
+
+      micMuted = !micMuted;
+
+      if (micMuted) {
+        input.disabled = true;
+        micBtn.textContent = "🔊 Mic On";
+        msgDiv.textContent = "🔒 Mic muted. Privacy mode activated.";
+        msgDiv.classList.remove("hidden");
+      } else {
+        input.disabled = false;
+        micBtn.textContent = "🔇 Mic Kill Switch";
+        msgDiv.textContent = "";
+        msgDiv.classList.add("hidden");
+      }
+    }
+  </script>
+
+</body>
+</html>
